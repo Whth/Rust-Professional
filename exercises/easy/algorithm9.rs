@@ -37,7 +37,9 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        self.swim(self.count);
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +59,31 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        if right > self.count || self.comparator(&self.items[left], &self.items[right]) {
+            left
+        } else {
+            right
+        }
+    }
+
+    fn swim(&mut self, mut idx: usize) {
+        while idx > 1 && self.comparator(&self.items[self.parent_idx(idx)], &self.items[idx]) {
+            self.items.swap(idx, self.parent_idx(idx));
+            idx = self.parent_idx(idx);
+        }
+    }
+
+    fn sink(&mut self, mut idx: usize) {
+        while self.children_present(idx) {
+            let child = self.smallest_child_idx(idx);
+            if !self.comparator(&self.items[idx], &self.items[child]) {
+                break;
+            }
+            self.items.swap(idx, child);
+            idx = child;
+        }
     }
 }
 
@@ -84,8 +109,15 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+        let item = self.items[1].clone();
+        self.items.swap(1, self.count);
+        self.items.pop();
+        self.count -= 1;
+        self.sink(1);
+        Some(item)
     }
 }
 
