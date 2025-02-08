@@ -61,24 +61,33 @@ where
     fn smallest_child_idx(&self, idx: usize) -> usize {
         let left = self.left_child_idx(idx);
         let right = self.right_child_idx(idx);
-        if right > self.count || self.comparator(&self.items[left], &self.items[right]) {
+
+        if right > self.count {
+            left
+        } else if (self.comparator)(&self.items[left], &self.items[right]) {
             left
         } else {
             right
         }
     }
 
-    fn swim(&mut self, mut idx: usize) {
-        while idx > 1 && self.comparator(&self.items[self.parent_idx(idx)], &self.items[idx]) {
-            self.items.swap(idx, self.parent_idx(idx));
-            idx = self.parent_idx(idx);
+    fn swim(&mut self, idx: usize) {
+        let mut idx = idx;
+        while idx > 1 {
+            let parent_idx = self.parent_idx(idx); // Store parent index in a variable
+            if (self.comparator)(&self.items[parent_idx], &self.items[idx]) {
+                break;
+            }
+            self.items.swap(idx, parent_idx); // Use the stored parent index
+            idx = parent_idx;
         }
     }
 
-    fn sink(&mut self, mut idx: usize) {
+    fn sink(&mut self, idx: usize) {
+        let mut idx = idx;
         while self.children_present(idx) {
             let child = self.smallest_child_idx(idx);
-            if !self.comparator(&self.items[idx], &self.items[child]) {
+            if (self.comparator)(&self.items[idx], &self.items[child]) {
                 break;
             }
             self.items.swap(idx, child);
@@ -104,20 +113,23 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default+Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         if self.is_empty() {
-            return None;
+            None
+        } else if self.count == 1 {
+            self.count -= 1;
+            Some(self.items.pop().unwrap())
+        } else {
+            let root = self.items[1].clone();
+            self.items[1] = self.items.pop().unwrap();
+            self.count -= 1;
+            self.sink(1);
+            Some(root)
         }
-        let item = self.items[1].clone();
-        self.items.swap(1, self.count);
-        self.items.pop();
-        self.count -= 1;
-        self.sink(1);
-        Some(item)
     }
 }
 

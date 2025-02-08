@@ -113,7 +113,7 @@ fn bracket_match(bracket: &str) -> bool {
         match c {
             '(' | '{' | '[' => stack.push(c),
             ')' | '}' | ']' => {
-                if stack.is_empty() || stack.pop() != pairs.get(&c) {
+                if stack.is_empty() || stack.pop() != pairs.get(&c).cloned() {
                     return false;
                 }
             }
