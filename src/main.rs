@@ -189,6 +189,8 @@ fn evaluate_single_file(file_path: &PathBuf) -> bool {
         } else {
             // 编译失败
             eprintln!("\x1b[31m{}: COMPILATION FAILED\x1b[0m", file_path.display());
+            // 打印编译错误信息
+            eprintln!("Error details: {}", String::from_utf8_lossy(&output.stderr));
             return false;
         }
     } else {
