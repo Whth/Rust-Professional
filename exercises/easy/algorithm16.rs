@@ -12,7 +12,24 @@
 use std::fmt::{self, Display, Formatter};
 
 pub fn rotate_matrix_90_degrees(matrix: &mut Vec<Vec<i32>>) {
-    // TODO: Implement the logic to rotate the matrix 90 degrees in place
+    let n = matrix.len();
+    for layer in 0..n / 2 {
+        let first = layer;
+        let last = n - 1 - layer;
+        for i in first..last {
+            let offset = i - first;
+            // save top
+            let top = matrix[first][i];
+            // left -> top
+            matrix[first][i] = matrix[last - offset][first];
+            // bottom -> left
+            matrix[last - offset][first] = matrix[last][last - offset];
+            // right -> bottom
+            matrix[last][last - offset] = matrix[i][last];
+            // top -> right
+            matrix[i][last] = top;
+        }
+    }
 }
 
 #[cfg(test)]
