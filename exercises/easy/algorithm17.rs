@@ -12,16 +12,15 @@
 use std::collections::HashSet;
 
 pub fn intersection(nums1: Vec<i32>, nums2: Vec<i32>) -> Vec<i32> {
-    let set1: HashSet<i32> = nums1.into_iter().collect();
-    let mut result_set = HashSet::new();
+    let set2: HashSet<i32> = nums2.into_iter().collect();
+    let mut result = Vec::new();
 
-    for num in nums2 {
-        if set1.contains(&num) {
-            result_set.insert(num);
+    for num in nums1 {
+        if set2.contains(&num) && !result.contains(&num) {
+            result.push(num);
         }
     }
-
-    result_set.into_iter().collect()
+    result
 }
 
 #[cfg(test)]
