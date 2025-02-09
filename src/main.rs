@@ -1,17 +1,17 @@
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
-use std::path::{Path, PathBuf};
-use std::process::{Command, exit};
+use std::io::{self};
+use std::path::PathBuf;
+use std::process::{exit, Command};
 use std::time::Instant;
-use std::io::{self, Write};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Exercise {
     name: String,
     path: String,
     #[serde(rename = "type")]
-    exercise_type: String,  
-    score: i32, 
+    exercise_type: String,
+    score: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -25,7 +25,7 @@ struct ExerciseConfig {
 struct ExerciseResult {
     name: String,
     result: bool,
-    score: i32, 
+    score: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -33,7 +33,7 @@ struct Statistics {
     total_exercises: usize,
     total_successes: usize,
     total_failures: usize,
-    total_score: i32,  
+    total_score: i32,
     total_time: u64,
 }
 
@@ -53,7 +53,7 @@ fn main() {
     let mode = &args[1];
     let start_time = Instant::now();
 
-    
+
     let config = match load_exercise_config("exercise_config.json") {
         Ok(cfg) => cfg,
         Err(e) => {
@@ -73,21 +73,21 @@ fn main() {
         },
     };
 
-    
+
     evaluate_exercises_from_config(mode, config, &mut report);
 
-    
+
     report.statistics.total_time = start_time.elapsed().as_secs();
     report.statistics.total_exercises = report.statistics.total_successes + report.statistics.total_failures;
 
-    
+
     println!("\nSummary:");
     println!("Total exercises: {}", report.statistics.total_exercises);
     println!("Total successes: {}", report.statistics.total_successes);
     println!("Total failures: {}", report.statistics.total_failures);
     println!("Total score: {}", report.statistics.total_score);
 
-    
+
     if let Err(e) = save_report_to_json("report.json", &report) {
         eprintln!("Error saving report: {}", e);
     }
@@ -146,7 +146,7 @@ fn evaluate_exercise(exercise: &Exercise) -> bool {
 // 评测单文件 Rust 习题（使用 rustc --test 并执行测试）
 fn evaluate_single_file(file_path: &PathBuf) -> bool {
     // 获取文件名（不带扩展名）
-    let test_binary = file_path.with_extension(""); 
+    let test_binary = file_path.with_extension("");
 
     // 编译测试文件
     let compile_output = Command::new("rustc")
@@ -169,6 +169,9 @@ fn evaluate_single_file(file_path: &PathBuf) -> bool {
                         true
                     } else {
                         println!("\x1b[31m{}: TEST FAILED\x1b[0m", file_path.display());
+                        // 打印测试错误信息
+                        println!("Test output: {}", String::from_utf8_lossy(&test_run.stdout));
+                        println!("Test error details: {}", String::from_utf8_lossy(&test_run.stderr));
                         false
                     }
                 }
@@ -226,7 +229,14 @@ fn run_cargo_command(proj_path: &PathBuf, command: &str) -> bool {
         .output();
 
     match output {
-        Ok(out) => out.status.success(),
+        Ok(out) => {
+            let suc = out.status.success();
+            if suc {
+                println!("{}", String::from_utf8_lossy(&out.stdout));
+                println!("{}", String::from_utf8_lossy(&out.stderr));
+            }
+            suc
+        }
         Err(_) => false,
     }
 }
