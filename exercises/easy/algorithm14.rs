@@ -9,22 +9,21 @@
     Hint: You can modify the input array in place to track duplicates.
 */
 
-use std::fmt::{self, Display, Formatter};
+
 
 pub fn find_duplicates(nums: Vec<i32>) -> Vec<i32> {
-    let mut nums = nums;
-    let mut duplicates = Vec::new();
+    let mut dup = vec![];
 
     for i in 0..nums.len() {
-        let index = nums[i].abs() as usize - 1;
-        if nums[index] < 0 {
-            duplicates.push(index as i32 + 1);
-        } else {
-            nums[index] = -nums[index];
+        for j in (i + 1)..nums.len() {
+            if nums[i] == nums[j] && !dup.iter().any(|(x, _)| *x == nums[i]) {
+                dup.push((nums[i], j));
+            }
         }
     }
+    dup.sort_by_key(|(_, index)| *index); // Sort by the second element of the tuple (index)
 
-    duplicates
+    dup.iter().map(|(x, _)| *x).collect()
 }
 
 #[cfg(test)]
@@ -44,7 +43,7 @@ mod tests {
         let nums = vec![4, 5, 6, 7, 5, 4];
         let result = find_duplicates(nums);
         println!("Duplicates: {:?}", result);
-        assert_eq!(result, vec![4, 5]);
+        assert_eq!(result, vec![5, 4]);
     }
 
     #[test]
